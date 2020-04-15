@@ -2,8 +2,6 @@ import {IActionHttp, IActorHttpOutput} from "@comunica/bus-http";
 import {ActorRdfParseFixedMediaTypes, IActionRdfParse,
   IActorRdfParseFixedMediaTypesArgs, IActorRdfParseOutput} from "@comunica/bus-rdf-parse";
 import {ActionContext, Actor, IActorTest, Mediator} from "@comunica/core";
-import {parse as parseLinkHeader} from "http-link-header";
-import {JsonLdContext} from "jsonld-context-parser";
 import {JsonLdParser} from "jsonld-streaming-parser";
 import * as RDF from "rdf-js";
 import {DocumentLoaderMediated} from "./DocumentLoaderMediated";
@@ -22,30 +20,19 @@ export class ActorRdfParseJsonLd extends ActorRdfParseFixedMediaTypes {
     super(args);
   }
 
+  public async testHandle(action: IActionRdfParse, mediaType: string, context: ActionContext): Promise<IActorTest> {
+    if (!(mediaType in this.mediaTypes) && !mediaType.endsWith('+json')) {
+      throw new Error('Unrecognized media type: ' + mediaType);
+    }
+    return await this.testHandleChecked(action);
+  }
+
   public async runHandle(action: IActionRdfParse, mediaType: string, actionContext: ActionContext)
     : Promise<IActorRdfParseOutput> {
-    // Try to extract a JSON-LD context link header (https://w3c.github.io/json-ld-syntax/#interpreting-json-as-json-ld)
-    let context: JsonLdContext;
-    if (mediaType !== 'application/ld+json' && action.headers && action.headers.has('Link')) {
-      const linkHeader = parseLinkHeader(action.headers.get('Link'));
-      for (const link of linkHeader.get('rel', 'http://www.w3.org/ns/json-ld#context')) {
-        if (link.type === 'application/ld+json') {
-          if (context) {
-            throw new Error('Multiple JSON-LD context link headers were found on ' + action.baseIRI);
-          }
-          context = link.uri;
-        }
-      }
-    }
-
-    // Parse the JSON-LD
-    const quads: RDF.Stream = <any> new JsonLdParser({
-      allowOutOfOrderContext: true,
-      baseIRI: action.baseIRI,
-      context,
+    const parser = JsonLdParser.fromHttpResponse(action.baseIRI, mediaType, action.headers, {
       documentLoader: new DocumentLoaderMediated(this.mediatorHttp, actionContext),
-    }).import(action.input);
-
+    });
+    const quads: RDF.Stream = parser.import(action.input);
     return { quads };
   }
 

@@ -1,6 +1,55 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+<a name="v1.12.0"></a>
+## [v1.12.0](https://github.com/comunica/comunica/compare/v1.11.1...v1.12.0) - 2020-04-03
+
+### Changed
+* [Update to JSON-LD parser to 1.1](https://github.com/comunica/comunica/commit/cb47af1f3d29629e36c431b481e6752dccdf8227)
+
+### Added
+* [Handle JSON-LD via JSON extension types as well](https://github.com/comunica/comunica/commit/ea6da5ea9b392413e701aaa82c611fa3ebad4573)
+* [Pass HTTP headers to HTML script parsers](https://github.com/comunica/comunica/commit/1d7b9e7e4fd89d2985735fe5c1b9cb10cb873ee6)
+* [Allow HTML scripts to be targeted by id via fragments](https://github.com/comunica/comunica/commit/138a73ed682d01b7b402e721445edfab8ed7c6bc)
+* [Throw error on application/json without valid JSON-LD link header](https://github.com/comunica/comunica/commit/42e0999f088ddab271568424bac39143bdc15ecc)
+
+### Fixed
+* [Fix HTML parser not forwarding errors within listeners](https://github.com/comunica/comunica/commit/cfdfef2fc6d689afc2b1f91d3b89db385aff3885)
+
+<a name="v1.11.1"></a>
+## [v1.11.1](https://github.com/comunica/comunica/compare/v1.11.0...v1.11.1) - 2020-04-02
+
+### Added
+* [Add Runner.collectActors method](https://github.com/comunica/comunica/commit/a9a48156a09f10d4aa57ee188f5fa99dc1e842af)
+
+### Fixed
+* [Fix initialBindings not applied on full query](https://github.com/comunica/comunica/commit/1e2461bf7300e5c398a41cbc63db65cddd63a27f)
+
+### Changed
+* [Output number of HTTP requests in stats serializer](https://github.com/comunica/comunica/commit/52f7a12ac0e99746ce4def9e663166d43bbf037a)
+* [Remove unneeded action argument in Setup.instantiateComponent](https://github.com/comunica/comunica/commit/ec48359dd495930fe1a697ffe14fcfae8f3355f8)
+
+<a name="v1.11.0"></a>
+## [v1.11.0](https://github.com/comunica/comunica/compare/v1.10.0...v1.11.0) - 2020-03-30
+
+### Added
+* [Add more efficient optional actor](https://github.com/comunica/comunica/commit/6b8d0c64250bafaca8399e82c6fa2d32524e950e)
+* [Expose SPARQL service description in HTTP tool, Closes #219](https://github.com/comunica/comunica/commit/fe0770c5a6fba235004d8d300957bcdb5f6c3650)
+
+### Changed
+* [Optimize default graph handling in QPF sources](https://github.com/comunica/comunica/commit/6d1ac14b52076feb3da737c96fac7d424a691288)
+* [Scope blank nodes to each federated source](https://github.com/comunica/comunica/commit/cb7b9b23fc3e7891febad401d26019e23a616cc8)
+
+### Fixed
+* [Fix application aborting on some optional queries](https://github.com/comunica/comunica/commit/c7a6d0d7f2ecf28f1e38f142a1245cbaebe19b1c)
+* [Use xsd:dateTime format (ISO 8601) for NOW](https://github.com/comunica/comunica/commit/a422b6c1e1e4fd4f2dadea68ad02bfbe06644147)
+* Fix several issues with SPARQL endpoints:
+    * [Fix crash when slicing construct queries](https://github.com/comunica/comunica/commit/1564acfeea8f199a61122f18cda8e60312b6a163)
+    * [Fix only SELECT queries being handleable by SPARQL endpoints](https://github.com/comunica/comunica/commit/0688c7c2dea85550a6da97c1d7222a6026943951)
+    * [Fix SPARQL endpoint detection failing when SD uses blank node subjects #619](https://github.com/comunica/comunica/commit/256815fa4d345788ed2007909a6a906790dc30eb)
+    * [Fix SPARQL endpoint detection failing for relative IRIs #619](https://github.com/comunica/comunica/commit/8181249107b856327b890d3fa5c4c84bd43613c8)
+    * [Consider sources ending with '/sparql' as SPARQL endpoints, Closes #535](https://github.com/comunica/comunica/commit/5c39a00ab3da90bb06c5946c83b93a3fac36f01a)
+
 <a name="v1.10.0"></a>
 ## [v1.10.0](https://github.com/comunica/comunica/compare/v1.9.4...v1.10.0) - 2019-12-12
 

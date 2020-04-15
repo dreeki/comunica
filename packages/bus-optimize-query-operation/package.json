@@ -1,6 +1,6 @@
 {
   "name": "@comunica/bus-optimize-query-operation",
-  "version": "1.9.3",
+  "version": "1.11.0",
   "description": "A comunica bus for optimize-query-operation events.",
   "lsd:module": "https://linkedsoftwaredependencies.org/bundles/npm/@comunica/bus-optimize-query-operation",
   "lsd:components": "components/components.jsonld",
@@ -34,7 +34,7 @@
     "index.js"
   ],
   "dependencies": {
-    "sparqlalgebrajs": "^2.2.0"
+    "sparqlalgebrajs": "^2.2.1"
   },
   "peerDependencies": {
     "@comunica/core": "^1.4.0"

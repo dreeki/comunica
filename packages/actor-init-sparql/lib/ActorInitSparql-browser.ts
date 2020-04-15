@@ -6,12 +6,12 @@ import {
   IActorOptimizeQueryOperationOutput,
 } from "@comunica/bus-optimize-query-operation";
 import {
-  Bindings,
   ensureBindings,
   IActionQueryOperation,
   IActorQueryOperationOutput,
   KEY_CONTEXT_BASEIRI,
   KEY_CONTEXT_QUERY_TIMESTAMP,
+  materializeOperation,
 } from "@comunica/bus-query-operation";
 import {IDataSource, KEY_CONTEXT_SOURCES} from "@comunica/bus-rdf-resolve-quad-pattern";
 import {IActionSparqlParse, IActorSparqlParseOutput} from "@comunica/bus-sparql-parse";
@@ -24,9 +24,6 @@ import {
 } from "@comunica/bus-sparql-serialize";
 import {ActionContext, Actor, IAction, IActorArgs, IActorTest, KEY_CONTEXT_LOG, Logger, Mediator} from "@comunica/core";
 import {AsyncReiterableArray} from "asyncreiterable";
-import * as RDF from "rdf-js";
-import {termToString} from "rdf-string";
-import {QUAD_TERM_NAMES} from "rdf-terms";
 import {Algebra} from "sparqlalgebrajs";
 
 /**
@@ -48,6 +45,9 @@ export class ActorInitSparql extends ActorInit implements IActorInitSparqlArgs {
   public readonly mediatorSparqlSerializeMediaTypeCombiner: Mediator<Actor<IActionRootSparqlParse,
     IActorTestRootSparqlParse, IActorOutputRootSparqlParse>, IActionRootSparqlParse, IActorTestRootSparqlParse,
     IActorOutputRootSparqlParse>;
+  public readonly mediatorSparqlSerializeMediaTypeFormatCombiner: Mediator<Actor<IActionRootSparqlParse,
+    IActorTestRootSparqlParse, IActorOutputRootSparqlParse>, IActionRootSparqlParse, IActorTestRootSparqlParse,
+    IActorOutputRootSparqlParse>;
   public readonly mediatorContextPreprocess: Mediator<Actor<IAction, IActorTest,
     IActorContextPreprocessOutput>, IAction, IActorTest, IActorContextPreprocessOutput>;
   public readonly mediatorHttpInvalidate: Mediator<Actor<IActionHttpInvalidate, IActorTest, IActorHttpInvalidateOutput>,
@@ -60,49 +60,6 @@ export class ActorInitSparql extends ActorInit implements IActorInitSparqlArgs {
 
   constructor(args: IActorInitSparqlArgs) {
     super(args);
-  }
-
-  /**
-   * Create a copy of the given operation in which all given bindings are applied.
-   * The bindings are applied to all quad patterns and path expressions.
-   *
-   * @param {Operation} operation An operation.
-   * @param {Bindings} initialBindings Bindings to apply.
-   * @return {Operation} A copy of the given operation where all given bindings are applied.
-   */
-  public static applyInitialBindings(operation: Algebra.Operation, initialBindings: Bindings): Algebra.Operation {
-    const copiedOperation: Algebra.Operation = <any> {};
-    for (const key of Object.keys(operation)) {
-      if (Array.isArray(operation[key])) {
-        if (key === 'variables') {
-          copiedOperation[key] = operation[key].filter(
-            (variable: RDF.Variable) => !initialBindings.has(termToString(variable)));
-        } else {
-          copiedOperation[key] = operation[key].map(
-            (subOperation: Algebra.Operation) => ActorInitSparql.applyInitialBindings(subOperation, initialBindings));
-        }
-      } else if (operation[key] && ActorInitSparql.ALGEBRA_TYPES[operation[key].type]) {
-        copiedOperation[key] = ActorInitSparql.applyInitialBindings(operation[key], initialBindings);
-      } else {
-        copiedOperation[key] = operation[key];
-      }
-
-      if (operation.type === Algebra.types.PATTERN || operation.type === Algebra.types.PATH) {
-        for (const quadTerm of QUAD_TERM_NAMES) {
-          if (!(operation.type === Algebra.types.PATH && quadTerm === 'predicate')) {
-            const term: RDF.Term = operation[quadTerm];
-            if (term.termType === 'Variable') {
-              const termString: string = termToString(term);
-              const binding: RDF.Term = initialBindings.get(termString);
-              if (binding) {
-                copiedOperation[quadTerm] = binding;
-              }
-            }
-          }
-        }
-      }
-    }
-    return copiedOperation;
   }
 
   public async test(action: IActionInit): Promise<IActorTest> {
@@ -181,7 +138,7 @@ export class ActorInitSparql extends ActorInit implements IActorInitSparqlArgs {
     // Apply initial bindings in context
     if (context.has(KEY_CONTEXT_INITIALBINDINGS)) {
       const bindings = context.get(KEY_CONTEXT_INITIALBINDINGS);
-      operation = ActorInitSparql.applyInitialBindings(operation, ensureBindings(bindings));
+      operation = materializeOperation(operation, ensureBindings(bindings));
     }
 
     // Optimize the query operation
@@ -200,6 +157,14 @@ export class ActorInitSparql extends ActorInit implements IActorInitSparqlArgs {
    */
   public async getResultMediaTypes(context: ActionContext): Promise<{[id: string]: number}> {
     return (await this.mediatorSparqlSerializeMediaTypeCombiner.mediate({ context, mediaTypes: true })).mediaTypes;
+  }
+
+  /**
+   * @param context An optional context.
+   * @return {Promise<{[p: string]: number}>} All available SPARQL result media type formats.
+   */
+  public async getResultMediaTypeFormats(context: ActionContext): Promise<{[id: string]: string}> {
+    return (await this.mediatorSparqlSerializeMediaTypeFormatCombiner.mediate({ context, mediaTypeFormats: true })).mediaTypeFormats;
   }
 
   /**
@@ -257,6 +222,9 @@ export interface IActorInitSparqlArgs extends IActorArgs<IActionInit, IActorTest
   mediatorSparqlSerialize: Mediator<Actor<IActionRootSparqlParse, IActorTestRootSparqlParse,
     IActorOutputRootSparqlParse>, IActionRootSparqlParse, IActorTestRootSparqlParse, IActorOutputRootSparqlParse>;
   mediatorSparqlSerializeMediaTypeCombiner: Mediator<Actor<IActionRootSparqlParse,
+    IActorTestRootSparqlParse, IActorOutputRootSparqlParse>, IActionRootSparqlParse, IActorTestRootSparqlParse,
+    IActorOutputRootSparqlParse>;
+  mediatorSparqlSerializeMediaTypeFormatCombiner: Mediator<Actor<IActionRootSparqlParse,
     IActorTestRootSparqlParse, IActorOutputRootSparqlParse>, IActionRootSparqlParse, IActorTestRootSparqlParse,
     IActorOutputRootSparqlParse>;
   mediatorContextPreprocess: Mediator<Actor<IAction, IActorTest, IActorContextPreprocessOutput>,
