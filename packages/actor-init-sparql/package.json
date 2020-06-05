@@ -61,6 +61,7 @@
     "@comunica/actor-query-operation-describe-subject": "^1.11.1",
     "@comunica/actor-query-operation-distinct-hash": "^1.11.1",
     "@comunica/actor-query-operation-extend": "^1.11.1",
+    "@comunica/actor-query-operation-filter-geosparql": "^1.0.0",
     "@comunica/actor-query-operation-filter-sparqlee": "^1.11.1",
     "@comunica/actor-query-operation-from-quad": "^1.11.1",
     "@comunica/actor-query-operation-group": "^1.11.1",
